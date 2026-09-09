@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 1290446952172412547}
   m_Layer: 0
   m_Name: counter_b_3
-  m_TagString: Grabbable
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

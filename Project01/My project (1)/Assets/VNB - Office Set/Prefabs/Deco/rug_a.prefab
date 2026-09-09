@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 7937563225842180080}
   m_Layer: 0
   m_Name: rug_a
-  m_TagString: Grabbable
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

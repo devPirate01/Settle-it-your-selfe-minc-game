@@ -469,7 +469,7 @@ GameObject:
   - component: {fileID: -3884721621158138844}
   m_Layer: 0
   m_Name: bookshelf_locked
-  m_TagString: Grabbable
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

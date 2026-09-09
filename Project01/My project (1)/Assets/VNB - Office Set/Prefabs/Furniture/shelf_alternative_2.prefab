@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: -7475667284899482060}
   m_Layer: 0
   m_Name: shelf_alternative_2
-  m_TagString: Grabbable
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

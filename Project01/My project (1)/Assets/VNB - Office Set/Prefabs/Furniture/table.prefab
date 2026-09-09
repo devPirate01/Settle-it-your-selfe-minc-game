@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 50e3c55e6165d9f4a91d227acb161303, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabbableProp
-  propClass: 0
+  propClass: 2
   customOverride: 0
   customStats:
     holdStyle: 0
