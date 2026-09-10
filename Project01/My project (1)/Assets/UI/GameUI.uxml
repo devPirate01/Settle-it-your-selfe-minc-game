@@ -1,0 +1,65 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/GameUI.uss?fileID=7433441132597879392&amp;guid=gameui_uss&amp;type=3#GameUI" />
+    <ui:VisualElement name="root-container" class="root-fullscreen">
+        
+        <!-- 1. COMBAT HUD (Top split-screen health bars) -->
+        <ui:VisualElement name="hud-layer" class="hud-layer">
+            <ui:VisualElement name="p1-hud" class="player-hud hud-left">
+                <ui:Label text="PLAYER 1" name="p1-name" class="player-label" />
+                <ui:VisualElement name="p1-health-bg" class="health-bar-bg">
+                    <ui:VisualElement name="p1-health-fill" class="health-bar-fill fill-p1" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            
+            <ui:VisualElement name="hud-center" class="hud-center">
+                <ui:Label text="05:00" name="timer-label" class="timer-label" />
+                <ui:Label text="1 PROMOTION" name="badge-text" class="promotion-badge" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="p2-hud" class="player-hud hud-right">
+                <ui:Label text="PLAYER 2" name="p2-name" class="player-label" />
+                <ui:VisualElement name="p2-health-bg" class="health-bar-bg">
+                    <ui:VisualElement name="p2-health-fill" class="health-bar-fill fill-p2" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 2. BOSS DIALOGUE (Cinematic bottom subtitle letterbox) -->
+        <ui:VisualElement name="boss-layer" class="boss-layer" style="display: none;">
+            <ui:VisualElement name="boss-dialogue-box" class="boss-dialogue-box">
+                <ui:Label text="EXECUTIVE BOSS" name="boss-tag" class="boss-tag" />
+                <ui:Label text="You two want that promotion?!" name="boss-text" class="boss-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 3. FIGHT BANNER -->
+        <ui:VisualElement name="banner-layer" class="banner-layer" style="display: none;">
+            <ui:Label text="FIGHT!" name="fight-text" class="fight-text" />
+        </ui:VisualElement>
+
+        <!-- 4. MAIN MENU OVERLAY -->
+        <ui:VisualElement name="menu-layer" class="menu-layer">
+            <ui:VisualElement name="menu-card" class="menu-card">
+                <ui:Label text="SETTLE IT YOURSELF!" class="menu-title" />
+                <ui:Label text="Only one coworker gets the promotion." class="menu-subtitle" />
+                <ui:Button text="START GAME" name="start-btn" class="primary-btn" />
+                <ui:Label text="Press SPACE or click to start" class="hint-text" />
+                <ui:VisualElement name="controls-box" class="controls-box">
+                    <ui:Label text="P1: W/S (Move)  A/D (Turn)  E (Grab/Throw)  Q (Punch)" class="control-line" />
+                    <ui:Label text="P2: Arrows (Move/Turn)  R-Shift (Grab/Throw)  Num0 (Punch)" class="control-line" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 5. GAME OVER / VICTORY OVERLAY -->
+        <ui:VisualElement name="victory-layer" class="victory-layer" style="display: none;">
+            <ui:VisualElement name="victory-card" class="victory-card">
+                <ui:Label text="PLAYER 1 WINS!" name="victory-title" class="victory-title" />
+                <ui:Label text="PROMOTION GRANTED" class="victory-subtitle" />
+                <ui:Button text="REMATCH" name="rematch-btn" class="primary-btn" />
+                <ui:Label text="Press R to quick restart" class="hint-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

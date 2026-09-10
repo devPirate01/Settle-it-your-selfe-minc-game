@@ -15,5 +15,8 @@ public class GameUI : MonoBehaviour
         string winner = loserName == "MP_Female_A1F Woman" ? "Player 2 Wins!" : "Player 1 Wins!";
         winnerText.text = winner;
         winnerText.gameObject.SetActive(true);
+
+        // Show rematch button / prompt
+        GameIntroManager.Instance?.OnGameOver();
     }
 }

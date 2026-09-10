@@ -1,0 +1,230 @@
+/* Root Fullscreen Container */
+.root-fullscreen {
+    width: 100%;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* 1. HUD LAYER */
+.hud-layer {
+    width: 100%;
+    padding: 20px 40px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.player-hud {
+    width: 38%;
+    background-color: rgba(15, 18, 26, 0.75);
+    padding: 12px 18px;
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.player-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(240, 243, 250);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+.health-bar-bg {
+    width: 100%;
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.85);
+    border-radius: 6px;
+    overflow: hidden;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.health-bar-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 4px;
+    transition-property: width;
+    transition-duration: 0.15s;
+}
+
+.fill-p1 {
+    background-color: rgb(0, 168, 255);
+}
+
+.fill-p2 {
+    background-color: rgb(255, 71, 87);
+}
+
+.hud-center {
+    align-items: center;
+    justify-content: center;
+    padding-top: 4px;
+}
+
+.timer-label {
+    font-size: 32px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+    -unity-text-align: middle-center;
+    transition-property: scale, color;
+    transition-duration: 0.2s;
+}
+
+.timer-warning {
+    color: rgb(255, 71, 87);
+    scale: 1.1 1.1;
+}
+
+.timer-sudden-death {
+    font-size: 26px;
+    color: rgb(255, 40, 40);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgb(180, 0, 0);
+    scale: 1.15 1.15;
+}
+
+.promotion-badge {
+    background-color: rgb(230, 184, 0);
+    color: rgb(15, 15, 15);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+/* 2. BOSS DIALOGUE LETTERBOX */
+.boss-layer {
+    position: absolute;
+    bottom: 40px;
+    width: 80%;
+    align-self: center;
+    align-items: center;
+}
+
+.boss-dialogue-box {
+    width: 100%;
+    background-color: rgba(10, 12, 18, 0.92);
+    border-radius: 12px;
+    padding: 18px 28px;
+    border-width: 2px;
+    border-color: rgb(230, 184, 0);
+}
+
+.boss-tag {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(230, 184, 0);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+
+.boss-text {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+/* 3. FIGHT BANNER */
+.banner-layer {
+    position: absolute;
+    align-self: center;
+    top: 38%;
+}
+
+.fight-text {
+    font-size: 96px;
+    -unity-font-style: bold;
+    color: rgb(255, 220, 0);
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: rgb(220, 20, 60);
+    letter-spacing: 4px;
+}
+
+/* 4. MAIN MENU OVERLAY */
+.menu-layer, .victory-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(8, 10, 16, 0.88);
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-card, .victory-card {
+    background-color: rgb(22, 27, 38);
+    padding: 40px 50px;
+    border-radius: 16px;
+    align-items: center;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.12);
+    min-width: 520px;
+}
+
+.menu-title, .victory-title {
+    font-size: 42px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+
+.menu-subtitle, .victory-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 30px;
+}
+
+.primary-btn {
+    width: 280px;
+    height: 56px;
+    background-color: rgb(230, 184, 0);
+    color: rgb(15, 18, 26);
+    font-size: 20px;
+    -unity-font-style: bold;
+    border-radius: 8px;
+    border-width: 0;
+    margin-bottom: 12px;
+    transition-duration: 0.1s;
+}
+
+.primary-btn:hover {
+    background-color: rgb(255, 210, 50);
+    scale: 1.04 1.04;
+}
+
+.primary-btn:active {
+    background-color: rgb(200, 155, 0);
+    scale: 0.98 0.98;
+}
+
+.hint-text {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 24px;
+}
+
+.controls-box {
+    background-color: rgba(0, 0, 0, 0.35);
+    padding: 14px 20px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+.control-line {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 4px;
+}
