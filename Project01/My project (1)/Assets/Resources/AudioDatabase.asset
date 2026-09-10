@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13d32c4cdda03b34c8d65312e5d58a22, type: 3}
   m_Name: AudioDatabase
   m_EditorClassIdentifier: Assembly-CSharp::AudioDatabase
-  battleMusic: {fileID: 8300000, guid: f7b5eb4fe80e7934d9ca7fca967f65cd, type: 3}
-  battleMusicVolume: 0.7
+  battleMusic: {fileID: 8300000, guid: d27a962f7c0e9474885f0ee7596ecc87, type: 3}
+  battleMusicVolume: 0.5
   suddenDeathMusic: {fileID: 8300000, guid: 7ae62662df56a3e41abc4bad56b6810a, type: 3}
   suddenDeathMusicVolume: 0.7
   propHitClips:
