@@ -16,6 +16,7 @@ public class GameUIController : MonoBehaviour
     VisualElement bossLayer;
     VisualElement bannerLayer;
     VisualElement victoryLayer;
+    VisualElement drawLayer;
 
     // Elements
     VisualElement p1Fill;
@@ -26,6 +27,23 @@ public class GameUIController : MonoBehaviour
     Label victoryTitle;
     Button startBtn;
     Button rematchBtn;
+    Button drawRestartBtn;
+
+    // Input Mode Settings Elements
+    Button modeKeyboardBtn;
+    Button modeControllerBtn;
+    Label controllerStatus;
+    Label p1ControlLine;
+    Label p2ControlLine;
+    Label startHintText;
+
+    // Slack Notification Elements
+    VisualElement slackToast;
+    Label slackSender;
+    Label slackMessage;
+    Coroutine slackToastRoutine;
+
+    float statusCheckTimer;
 
     void Awake()
     {
@@ -45,6 +63,7 @@ public class GameUIController : MonoBehaviour
         bossLayer = root.Q<VisualElement>("boss-layer");
         bannerLayer = root.Q<VisualElement>("banner-layer");
         victoryLayer = root.Q<VisualElement>("victory-layer");
+        drawLayer = root.Q<VisualElement>("draw-layer");
 
         // Query controls
         p1Fill = root.Q<VisualElement>("p1-health-fill");
@@ -55,28 +74,116 @@ public class GameUIController : MonoBehaviour
         victoryTitle = root.Q<Label>("victory-title");
         startBtn = root.Q<Button>("start-btn");
         rematchBtn = root.Q<Button>("rematch-btn");
+        drawRestartBtn = root.Q<Button>("draw-restart-btn");
+
+        // Query Input Mode elements
+        modeKeyboardBtn = root.Q<Button>("btn-mode-keyboard");
+        modeControllerBtn = root.Q<Button>("btn-mode-controller");
+        controllerStatus = root.Q<Label>("controller-status");
+        p1ControlLine = root.Q<Label>("p1-control-line");
+        p2ControlLine = root.Q<Label>("p2-control-line");
+        startHintText = root.Q<Label>("start-hint-text");
+
+        // Query Slack elements
+        slackToast = root.Q<VisualElement>("slack-toast");
+        slackSender = root.Q<Label>("slack-sender");
+        slackMessage = root.Q<Label>("slack-message");
 
         // Bind clicks
-        if (startBtn != null)
-        {
-            startBtn.clicked += OnStartClicked;
-        }
-        if (rematchBtn != null)
-        {
-            rematchBtn.clicked += OnRematchClicked;
-        }
+        if (startBtn != null) startBtn.clicked += OnStartClicked;
+        if (rematchBtn != null) rematchBtn.clicked += OnRematchClicked;
+        if (drawRestartBtn != null) drawRestartBtn.clicked += OnRematchClicked;
+
+        if (modeKeyboardBtn != null) modeKeyboardBtn.clicked += () => SetInputMode(InputMode.Keyboard);
+        if (modeControllerBtn != null) modeControllerBtn.clicked += () => SetInputMode(InputMode.DualController);
+
+        // Initial setup
+        SetInputMode(MatchInputManager.CurrentMode);
+        UpdateControllerStatus();
 
         // Default initial state
         ShowMenu(true);
         HideBossDialogue();
         ShowFightBanner(false);
         if (victoryLayer != null) victoryLayer.style.display = DisplayStyle.None;
+        if (drawLayer != null) drawLayer.style.display = DisplayStyle.None;
+        if (slackToast != null)
+        {
+            slackToast.RemoveFromClassList("slack-toast-visible");
+            slackToast.AddToClassList("slack-toast-hidden");
+        }
     }
 
     void OnDisable()
     {
         if (startBtn != null) startBtn.clicked -= OnStartClicked;
         if (rematchBtn != null) rematchBtn.clicked -= OnRematchClicked;
+        if (drawRestartBtn != null) drawRestartBtn.clicked -= OnRematchClicked;
+    }
+
+    void Update()
+    {
+        // Periodically refresh controller connection status while menu is visible
+        if (menuLayer != null && menuLayer.style.display == DisplayStyle.Flex)
+        {
+            statusCheckTimer -= Time.deltaTime;
+            if (statusCheckTimer <= 0f)
+            {
+                statusCheckTimer = 0.5f;
+                UpdateControllerStatus();
+            }
+        }
+    }
+
+    public void SetInputMode(InputMode mode)
+    {
+        MatchInputManager.SetMode(mode);
+
+        if (mode == InputMode.Keyboard)
+        {
+            if (modeKeyboardBtn != null) modeKeyboardBtn.AddToClassList("mode-btn-active");
+            if (modeControllerBtn != null) modeControllerBtn.RemoveFromClassList("mode-btn-active");
+
+            if (p1ControlLine != null) p1ControlLine.text = "P1: W/S (Move)  A/D (Turn)  E (Grab/Throw)  Q (Punch)";
+            if (p2ControlLine != null) p2ControlLine.text = "P2: Arrows (Move/Turn)  R-Shift (Grab/Throw)  Num0 (Punch)";
+            if (startHintText != null) startHintText.text = "Press SPACE or click to start";
+        }
+        else
+        {
+            if (modeControllerBtn != null) modeControllerBtn.AddToClassList("mode-btn-active");
+            if (modeKeyboardBtn != null) modeKeyboardBtn.RemoveFromClassList("mode-btn-active");
+
+            if (p1ControlLine != null) p1ControlLine.text = "P1: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)";
+            if (p2ControlLine != null) p2ControlLine.text = "P2: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)";
+            if (startHintText != null) startHintText.text = "Press START or A on controller to start";
+        }
+
+        UpdateControllerStatus();
+    }
+
+    void UpdateControllerStatus()
+    {
+        if (controllerStatus == null) return;
+
+        int count = MatchInputManager.ConnectedGamepadCount;
+        if (count >= 2)
+        {
+            controllerStatus.text = $"🎮 {count} Xbox Controllers Connected (Ready!)";
+            controllerStatus.RemoveFromClassList("status-warn");
+            controllerStatus.AddToClassList("status-ok");
+        }
+        else if (count == 1)
+        {
+            controllerStatus.text = "⚠️ 1 Controller Connected (Plug in 2nd for P2)";
+            controllerStatus.RemoveFromClassList("status-ok");
+            controllerStatus.AddToClassList("status-warn");
+        }
+        else
+        {
+            controllerStatus.text = "⚠️ 0 Controllers Detected (Check USB/Bluetooth)";
+            controllerStatus.RemoveFromClassList("status-ok");
+            controllerStatus.AddToClassList("status-warn");
+        }
     }
 
     void OnStartClicked()
@@ -144,18 +251,19 @@ public class GameUIController : MonoBehaviour
     {
         if (timerLabel == null) return;
 
+        int totalSec = Mathf.Max(0, Mathf.CeilToInt(secondsRemaining));
+        int m = totalSec / 60;
+        int s = totalSec % 60;
+
         if (suddenDeath)
         {
-            timerLabel.text = "SUDDEN DEATH!";
+            timerLabel.text = $"SUDDEN DEATH! {m:00}:{s:00}";
             timerLabel.RemoveFromClassList("timer-warning");
             timerLabel.AddToClassList("timer-sudden-death");
         }
         else
         {
             timerLabel.RemoveFromClassList("timer-sudden-death");
-            int totalSec = Mathf.Max(0, Mathf.CeilToInt(secondsRemaining));
-            int m = totalSec / 60;
-            int s = totalSec % 60;
             timerLabel.text = string.Format("{0:00}:{1:00}", m, s);
 
             if (totalSec <= 30)
@@ -176,5 +284,35 @@ public class GameUIController : MonoBehaviour
             victoryLayer.style.display = DisplayStyle.Flex;
             if (victoryTitle != null) victoryTitle.text = winnerText;
         }
+    }
+
+    public void ShowDrawScreen()
+    {
+        if (drawLayer != null)
+        {
+            drawLayer.style.display = DisplayStyle.Flex;
+        }
+    }
+
+    public void ShowSlackNotification(string sender, string message)
+    {
+        if (slackToast == null) return;
+
+        if (slackSender != null) slackSender.text = sender;
+        if (slackMessage != null) slackMessage.text = message;
+
+        if (slackToastRoutine != null) StopCoroutine(slackToastRoutine);
+        slackToastRoutine = StartCoroutine(SlackToastRoutine());
+    }
+
+    IEnumerator SlackToastRoutine()
+    {
+        slackToast.RemoveFromClassList("slack-toast-hidden");
+        slackToast.AddToClassList("slack-toast-visible");
+
+        yield return new WaitForSeconds(4.2f);
+
+        slackToast.RemoveFromClassList("slack-toast-visible");
+        slackToast.AddToClassList("slack-toast-hidden");
     }
 }

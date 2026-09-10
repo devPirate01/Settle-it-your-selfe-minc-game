@@ -65,7 +65,7 @@ public class PropDatabase : ScriptableObject
     { 
         holdStyle = HoldStyle.TwoHanded, 
         damage = 60, 
-        throwForce = 11f, 
+        throwForce = 6.5f, 
         moveSpeedMultiplier = 0.7f 
     };
 

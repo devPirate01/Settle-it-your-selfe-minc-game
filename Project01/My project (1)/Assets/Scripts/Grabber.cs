@@ -28,6 +28,9 @@ public class Grabber : MonoBehaviour
     float punchCooldownTimer;
     const float punchDuration = 0.35f;
 
+    Camera playerCam;
+    float smoothedAimY;
+
     void Start()
     {
         anim = GetComponentInChildren<Animator>();
@@ -38,14 +41,52 @@ public class Grabber : MonoBehaviour
         }
         movement = GetComponent<SimpleMovement>();
         cc = GetComponent<CharacterController>();
+
+        // Find camera following this player
+        var allCams = FindObjectsByType<CameraFollow>(FindObjectsSortMode.None);
+        foreach (var c in allCams)
+        {
+            if (c.target == transform)
+            {
+                playerCam = c.GetComponent<Camera>();
+                break;
+            }
+        }
+        if (!playerCam) playerCam = Camera.main;
     }
 
-    // 1-Handed Carry: Raised near right shoulder
-    Vector3 CarryPosOneHanded() => transform.position + transform.forward * 0.5f + transform.right * 0.4f + Vector3.up * 1.5f;
-    Quaternion CarryRotOneHanded() => Quaternion.LookRotation(transform.forward + transform.right * 0.3f, Vector3.up);
+    // 1-Handed Carry: Raised near right shoulder, arms shift and pitch with aim angle
+    Vector3 CarryPosOneHanded()
+    {
+        float upOffset = smoothedAimY * 0.55f;
+        float fwdOffset = -smoothedAimY * 0.12f;
+        return transform.position 
+            + transform.forward * (0.5f + fwdOffset) 
+            + transform.right * 0.4f 
+            + Vector3.up * (1.5f + upOffset);
+    }
 
-    // 2-Handed Carry: Centered in front of chest
-    Vector3 CarryPosTwoHanded() => transform.position + transform.forward * 0.65f + Vector3.up * 1.15f;
+    Quaternion CarryRotOneHanded()
+    {
+        float pitch = -smoothedAimY * 40f;
+        return Quaternion.Euler(pitch, transform.eulerAngles.y + 18f, 0f);
+    }
+
+    // 2-Handed Carry: Lifts chair up high when aiming up, lowers towards waist when aiming down
+    Vector3 CarryPosTwoHanded()
+    {
+        float upOffset = smoothedAimY * 0.45f;
+        float fwdOffset = smoothedAimY * 0.15f;
+        return transform.position 
+            + transform.forward * (0.65f + fwdOffset) 
+            + Vector3.up * (1.15f + upOffset);
+    }
+
+    Quaternion CarryRotTwoHanded()
+    {
+        float pitch = -smoothedAimY * 35f;
+        return Quaternion.Euler(pitch, transform.eulerAngles.y, 0f);
+    }
 
     Vector3 PunchPos(float progress)
     {
@@ -91,9 +132,59 @@ public class Grabber : MonoBehaviour
         if (rb)
         {
             rb.isKinematic = false;
-            float force = activePropStats != null ? activePropStats.throwForce : defaultThrowForce;
-            rb.AddForce((transform.forward + Vector3.up * 0.25f).normalized * force, ForceMode.Impulse);
+
+            bool isTwoHanded = activePropStats != null && activePropStats.holdStyle == HoldStyle.TwoHanded;
+            float baseForce = activePropStats != null ? activePropStats.throwForce : defaultThrowForce;
+
+            // 1. Two-handed objects: reduced range for a heavy, short-distance heave
+            if (isTwoHanded)
+            {
+                baseForce = Mathf.Min(baseForce, 6.5f);
+            }
+
+            Vector3 throwDir;
+            float finalForce = baseForce;
+
+            // 2. Controller Mode: Trajectory based on camera view angle
+            if (MatchInputManager.CurrentMode == InputMode.DualController && playerCam != null)
+            {
+                Vector3 camFwd = playerCam.transform.forward;
+                Vector3 camHoriz = Vector3.ProjectOnPlane(camFwd, Vector3.up).normalized;
+                if (camHoriz.sqrMagnitude < 0.01f) camHoriz = transform.forward;
+
+                // Turn character to face camera aim direction
+                transform.rotation = Quaternion.LookRotation(camHoriz, Vector3.up);
+
+                // Vertical look angle: positive = looking UP ("looking high"), negative = looking DOWN
+                float verticalAim = camFwd.y;
+
+                // Base loft so even horizontal aim has an arc
+                float baseLoft = isTwoHanded ? 0.35f : 0.22f;
+
+                // Loft increases when looking high, decreases when looking down
+                float dynamicLoft = Mathf.Clamp(baseLoft + verticalAim * 0.75f, -0.15f, 0.85f);
+                throwDir = (camHoriz + Vector3.up * dynamicLoft).normalized;
+
+                // If looking high, trajectory increased (boost launch force for high arc)
+                // If looking down, force is reduced for close-range slam
+                float aimMultiplier = 1f + verticalAim * 0.4f;
+                finalForce *= Mathf.Clamp(aimMultiplier, 0.7f, 1.4f);
+            }
+            else
+            {
+                // Keyboard Mode: Classic forward + upward arc along player facing
+                float loft = isTwoHanded ? 0.35f : 0.25f;
+                throwDir = (transform.forward + Vector3.up * loft).normalized;
+            }
+
+            rb.AddForce(throwDir * finalForce, ForceMode.Impulse);
+
+            // Add realistic prop tumbling torque
+            Vector3 spinAxis = Vector3.Cross(Vector3.up, throwDir).normalized;
+            float torqueSpeed = isTwoHanded ? 7f : 15f;
+            rb.AddTorque(spinAxis * torqueSpeed, ForceMode.Impulse);
         }
+
         var dmg = heldObject.GetComponent<DamageOnImpact>();
         if (dmg) { dmg.isThrown = true; dmg.thrower = transform; }
 
@@ -152,6 +243,12 @@ public class Grabber : MonoBehaviour
 
     void Update()
     {
+        // Track camera viewing pitch for aim stance
+        float targetAimY = (MatchInputManager.CurrentMode == InputMode.DualController && playerCam != null)
+            ? playerCam.transform.forward.y
+            : 0f;
+        smoothedAimY = Mathf.Lerp(smoothedAimY, targetAimY, Time.deltaTime * 10f);
+
         // Stolen object check
         if (heldObject != null && !isGrabbing && (heldObject.parent != rightHand && heldObject.parent != transform))
         {
@@ -160,28 +257,22 @@ public class Grabber : MonoBehaviour
             if (movement) movement.speedMultiplier = 1f;
         }
 
-        var kb = Keyboard.current;
-
         // Grab / Throw
-        bool grabPressed = playerIndex == 0 ? kb.eKey.isPressed : kb.rightShiftKey.isPressed;
-        if (grabPressed && !wasGrabPressed)
+        if (MatchInputManager.GetGrabDown(playerIndex))
         {
             if (heldObject) Throw();
             else TryGrab();
         }
-        wasGrabPressed = grabPressed;
 
         // Punch cooldown
         if (punchCooldownTimer > 0) punchCooldownTimer -= Time.deltaTime;
 
         // Punch (1s cooldown, blocked while holding an object)
-        bool punchPressed = playerIndex == 0 ? kb.qKey.isPressed : kb.numpad0Key.isPressed;
-        if (punchPressed && !wasPunchPressed && punchCooldownTimer <= 0 && heldObject == null)
+        if (MatchInputManager.GetPunchDown(playerIndex) && punchCooldownTimer <= 0 && heldObject == null)
         {
             Punch();
             punchCooldownTimer = punchCooldown;
         }
-        wasPunchPressed = punchPressed;
 
         // Punch animation
         if (punchTimer > 0)
@@ -230,11 +321,19 @@ public class Grabber : MonoBehaviour
     {
         if (heldObject != null)
         {
+            // Head and spine aim towards camera look direction
+            if (playerCam != null && MatchInputManager.CurrentMode == InputMode.DualController)
+            {
+                Vector3 lookTarget = transform.position + Vector3.up * 1.5f + playerCam.transform.forward * 8f;
+                anim.SetLookAtWeight(ikWeight * 0.65f, 0.25f, 0.75f, 0.5f);
+                anim.SetLookAtPosition(lookTarget);
+            }
+
             bool isTwoHanded = activePropStats != null && activePropStats.holdStyle == HoldStyle.TwoHanded;
 
             if (isTwoHanded)
             {
-                // TWO-HANDED CARRY (Chairs, Desks): Both hands clamp onto the object
+                // TWO-HANDED CARRY (Chairs, Desks): Both hands clamp onto the object and shift with aim angle
                 anim.SetIKPositionWeight(AvatarIKGoal.RightHand, ikWeight);
                 anim.SetIKRotationWeight(AvatarIKGoal.RightHand, ikWeight);
                 anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, ikWeight);
@@ -244,13 +343,22 @@ public class Grabber : MonoBehaviour
                 anim.SetIKPosition(AvatarIKGoal.RightHand, targetCenter + transform.right * 0.35f);
                 anim.SetIKPosition(AvatarIKGoal.LeftHand, targetCenter - transform.right * 0.35f);
 
-                Quaternion holdRot = Quaternion.LookRotation(transform.forward, Vector3.up);
+                Quaternion holdRot = CarryRotTwoHanded();
                 anim.SetIKRotation(AvatarIKGoal.RightHand, holdRot);
                 anim.SetIKRotation(AvatarIKGoal.LeftHand, holdRot);
+
+                // Update held object position to match lifted/lowered hands
+                if (!isGrabbing && heldObject.parent == transform)
+                {
+                    float upOffset = smoothedAimY * 0.45f;
+                    float fwdOffset = smoothedAimY * 0.15f;
+                    heldObject.localPosition = new Vector3(0f, 1.15f + upOffset, 0.65f + fwdOffset);
+                    heldObject.localRotation = Quaternion.Euler(-smoothedAimY * 35f, 0f, 0f);
+                }
             }
             else
             {
-                // ONE-HANDED CARRY (Mugs, Keyboards): Right hand raised ready to throw
+                // ONE-HANDED CARRY (Mugs, Keyboards): Right hand raised ready to throw, pitches with aim
                 anim.SetIKPositionWeight(AvatarIKGoal.RightHand, ikWeight);
                 anim.SetIKRotationWeight(AvatarIKGoal.RightHand, ikWeight);
                 Vector3 target = isGrabbing ? heldObject.position : CarryPosOneHanded();
@@ -262,25 +370,30 @@ public class Grabber : MonoBehaviour
                 anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
             }
         }
-        else if (punchTimer > 0)
-        {
-            float p = 1f - Mathf.Clamp01(punchTimer / punchDuration);
-            float w = Mathf.Sin(p * Mathf.PI);
-
-            anim.SetIKPositionWeight(AvatarIKGoal.RightHand, w);
-            anim.SetIKRotationWeight(AvatarIKGoal.RightHand, w);
-            anim.SetIKPosition(AvatarIKGoal.RightHand, PunchPos(p));
-            anim.SetIKRotation(AvatarIKGoal.RightHand, Quaternion.LookRotation(transform.forward - transform.right * 0.4f));
-
-            anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
-            anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
-        }
         else
         {
-            anim.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
-            anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
-            anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
-            anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
+            anim.SetLookAtWeight(0);
+
+            if (punchTimer > 0)
+            {
+                float p = 1f - Mathf.Clamp01(punchTimer / punchDuration);
+                float w = Mathf.Sin(p * Mathf.PI);
+
+                anim.SetIKPositionWeight(AvatarIKGoal.RightHand, w);
+                anim.SetIKRotationWeight(AvatarIKGoal.RightHand, w);
+                anim.SetIKPosition(AvatarIKGoal.RightHand, PunchPos(p));
+                anim.SetIKRotation(AvatarIKGoal.RightHand, Quaternion.LookRotation(transform.forward - transform.right * 0.4f));
+
+                anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
+                anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
+            }
+            else
+            {
+                anim.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
+                anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
+                anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
+                anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
+            }
         }
     }
 }

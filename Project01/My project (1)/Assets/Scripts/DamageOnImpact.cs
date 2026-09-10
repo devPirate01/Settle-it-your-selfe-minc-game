@@ -22,12 +22,15 @@ public class DamageOnImpact : MonoBehaviour
             {
                 var stats = prop.GetStats();
                 damage = stats.damage;
-                hitForce = Mathf.Clamp(stats.throwForce * 0.12f, 0.8f, 2.5f);
+                hitForce = stats.holdStyle == HoldStyle.TwoHanded ? 2.0f : Mathf.Clamp(stats.throwForce * 0.12f, 0.8f, 2.5f);
             }
             else
             {
                 damage = Mathf.Clamp(Mathf.RoundToInt(col.relativeVelocity.magnitude * 3.5f), 20, 50);
             }
+
+            // Play prop impact SFX
+            AudioManager.Instance?.PlayPropHit(hitForce);
 
             // Deals class-based damage + triggers real physics ragdoll knockdown
             health.TakeDamage(damage, col.relativeVelocity.normalized, hitForce);

@@ -4,16 +4,23 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class SimpleMovement : MonoBehaviour
 {
+    [Header("General Settings")]
     public float speed = 5f;
     public float rotateSpeed = 120f;
-    public int playerIndex = 0; // 0 = WASD, 1 = Arrow Keys
+    public int playerIndex = 0; // 0 = P1, 1 = P2
+
+    [Header("Controller Directional Movement")]
+    [Tooltip("Turn speed in degrees per second when rotating towards analog stick direction")]
+    public float controllerTurnSpeed = 720f;
 
     CharacterController cc;
     Animator anim;
     Transform chest;
+    Camera playerCam;
 
     float forwardInput;
     float rotateInput;
+    float previousYaw;
 
     // Smoothed torso lean angles
     float currentPitch;
@@ -34,30 +41,76 @@ public class SimpleMovement : MonoBehaviour
             chest = anim.GetBoneTransform(HumanBodyBones.Chest);
             if (!chest) chest = anim.GetBoneTransform(HumanBodyBones.Spine);
         }
+
+        // Find the camera assigned to follow this player
+        var allCams = FindObjectsByType<CameraFollow>(FindObjectsSortMode.None);
+        foreach (var c in allCams)
+        {
+            if (c.target == transform)
+            {
+                playerCam = c.GetComponent<Camera>();
+                break;
+            }
+        }
+        if (!playerCam) playerCam = Camera.main;
+
+        previousYaw = transform.eulerAngles.y;
     }
 
     void Update()
     {
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
-        if (playerIndex == 0)
+        if (MatchInputManager.CurrentMode == InputMode.DualController)
         {
-            forwardInput = (kb.wKey.isPressed ? 1 : 0) - (kb.sKey.isPressed ? 1 : 0);
-            rotateInput  = (kb.dKey.isPressed ? 1 : 0) - (kb.aKey.isPressed ? 1 : 0);
+            // CONTROLLER MODE: Modern 360-degree camera-relative movement
+            Vector2 stick = MatchInputManager.GetControllerMoveInput(playerIndex);
+            float magnitude = Mathf.Clamp01(stick.magnitude);
+
+            if (magnitude > 0.05f)
+            {
+                // Calculate movement direction relative to player's camera horizontal heading
+                Transform camT = playerCam != null ? playerCam.transform : Camera.main.transform;
+                Vector3 camFwd = Vector3.ProjectOnPlane(camT.forward, Vector3.up).normalized;
+                Vector3 camRight = Vector3.ProjectOnPlane(camT.right, Vector3.up).normalized;
+                Vector3 moveDir = (camFwd * stick.y + camRight * stick.x).normalized;
+
+                // Snappily rotate character to face the direction of the analog stick
+                float targetAngle = Mathf.Atan2(moveDir.x, moveDir.z) * Mathf.Rad2Deg;
+                float currentAngle = Mathf.MoveTowardsAngle(transform.eulerAngles.y, targetAngle, controllerTurnSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Euler(0f, currentAngle, 0f);
+
+                // Move forward in facing direction with analog speed
+                float moveSpeed = speed * speedMultiplier * magnitude;
+                Vector3 move = moveDir * moveSpeed + Vector3.down;
+                cc.Move(move * Time.deltaTime);
+
+                forwardInput = magnitude;
+
+                // Calculate angular velocity delta for procedural torso banking
+                float angularDelta = Mathf.DeltaAngle(previousYaw, currentAngle);
+                rotateInput = Mathf.Clamp(angularDelta / (Time.deltaTime * 360f), -1f, 1f);
+                previousYaw = currentAngle;
+            }
+            else
+            {
+                forwardInput = 0f;
+                rotateInput = 0f;
+                cc.Move(Vector3.down * Time.deltaTime);
+                previousYaw = transform.eulerAngles.y;
+            }
+
+            if (anim) anim.SetFloat("Speed", forwardInput);
         }
         else
         {
-            forwardInput = (kb.upArrowKey.isPressed ? 1 : 0) - (kb.downArrowKey.isPressed ? 1 : 0);
-            rotateInput  = (kb.rightArrowKey.isPressed ? 1 : 0) - (kb.leftArrowKey.isPressed ? 1 : 0);
+            // KEYBOARD MODE: Tank movement for 2 players sharing 1 keyboard
+            MatchInputManager.GetMovement(playerIndex, out forwardInput, out rotateInput);
+
+            transform.Rotate(0, rotateInput * rotateSpeed * Time.deltaTime, 0);
+            Vector3 move = transform.forward * forwardInput + Vector3.down;
+            cc.Move(move * (speed * speedMultiplier) * Time.deltaTime);
+
+            if (anim) anim.SetFloat("Speed", Mathf.Abs(forwardInput));
         }
-
-        // Rotate character then move forward (affected by speedMultiplier)
-        transform.Rotate(0, rotateInput * rotateSpeed * Time.deltaTime, 0);
-        Vector3 move = transform.forward * forwardInput + Vector3.down;
-        cc.Move(move * (speed * speedMultiplier) * Time.deltaTime);
-
-        if (anim) anim.SetFloat("Speed", Mathf.Abs(forwardInput));
     }
 
     void LateUpdate()

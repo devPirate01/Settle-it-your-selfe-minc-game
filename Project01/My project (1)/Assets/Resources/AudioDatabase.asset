@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13d32c4cdda03b34c8d65312e5d58a22, type: 3}
+  m_Name: AudioDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::AudioDatabase
+  battleMusic: {fileID: 0}
+  battleMusicVolume: 0.7
+  suddenDeathMusic: {fileID: 0}
+  suddenDeathMusicVolume: 0.85
+  propHitClips: []
+  propHitVolume: 0.9
+  playerDeathClip: {fileID: 0}
+  playerDeathVolume: 1
+  slackPingClip: {fileID: 0}
+  slackPingVolume: 0.85

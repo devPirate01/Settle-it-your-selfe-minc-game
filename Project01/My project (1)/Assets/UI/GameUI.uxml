@@ -42,11 +42,20 @@
             <ui:VisualElement name="menu-card" class="menu-card">
                 <ui:Label text="SETTLE IT YOURSELF!" class="menu-title" />
                 <ui:Label text="Only one coworker gets the promotion." class="menu-subtitle" />
+                
+                <!-- INPUT MODE SETTINGS -->
+                <ui:VisualElement name="mode-selector-row" class="mode-selector-row">
+                    <ui:Button text="⌨️ KEYBOARD" name="btn-mode-keyboard" class="mode-btn" />
+                    <ui:Button text="🎮 DUAL CONTROLLERS" name="btn-mode-controller" class="mode-btn mode-btn-active" />
+                </ui:VisualElement>
+                <ui:Label text="🎮 Controllers: Checking..." name="controller-status" class="controller-status status-ok" />
+
                 <ui:Button text="START GAME" name="start-btn" class="primary-btn" />
-                <ui:Label text="Press SPACE or click to start" class="hint-text" />
+                <ui:Label text="Press START or A on controller to start" name="start-hint-text" class="hint-text" />
+
                 <ui:VisualElement name="controls-box" class="controls-box">
-                    <ui:Label text="P1: W/S (Move)  A/D (Turn)  E (Grab/Throw)  Q (Punch)" class="control-line" />
-                    <ui:Label text="P2: Arrows (Move/Turn)  R-Shift (Grab/Throw)  Num0 (Punch)" class="control-line" />
+                    <ui:Label text="P1: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)" name="p1-control-line" class="control-line" />
+                    <ui:Label text="P2: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)" name="p2-control-line" class="control-line" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -58,6 +67,32 @@
                 <ui:Label text="PROMOTION GRANTED" class="victory-subtitle" />
                 <ui:Button text="REMATCH" name="rematch-btn" class="primary-btn" />
                 <ui:Label text="Press R to quick restart" class="hint-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 6. DRAW / NOBODY WON OVERLAY -->
+        <ui:VisualElement name="draw-layer" class="victory-layer" style="display: none;">
+            <ui:VisualElement name="draw-card" class="victory-card">
+                <ui:Label text="NOBODY GOT THE PROMOTION" name="draw-title" class="victory-title draw-title" />
+                <ui:Label text="HR has cancelled all promotions due to lack of performance." class="victory-subtitle" />
+                <ui:Button text="RESTART BATTLE" name="draw-restart-btn" class="primary-btn" />
+                <ui:Label text="Press R, START, or click to restart" class="hint-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 7. FLOATING SLACK NOTIFICATION TOAST (Top Right) -->
+        <ui:VisualElement name="slack-toast" class="slack-toast slack-toast-hidden">
+            <ui:VisualElement name="slack-header" class="slack-header">
+                <ui:Label text="💬 SLACK" class="slack-app-name" />
+                <ui:Label text="#urgent-promotion" class="slack-channel-name" />
+                <ui:Label text="now" class="slack-timestamp" />
+            </ui:VisualElement>
+            <ui:VisualElement name="slack-body" class="slack-body">
+                <ui:VisualElement name="slack-avatar" class="slack-avatar" />
+                <ui:VisualElement name="slack-content" class="slack-content">
+                    <ui:Label text="The Boss" name="slack-sender" class="slack-sender" />
+                    <ui:Label text="Come on, settle it! I don't have time!" name="slack-message" class="slack-message" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 

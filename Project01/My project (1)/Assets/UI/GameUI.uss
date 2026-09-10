@@ -228,3 +228,140 @@
     color: rgba(255, 255, 255, 0.75);
     margin-bottom: 4px;
 }
+
+/* 5. INPUT MODE SELECTOR */
+.mode-selector-row {
+    flex-direction: row;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 6px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn {
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    -unity-font-style: bold;
+    border-radius: 6px;
+    border-width: 0;
+    padding: 8px 16px;
+    transition-duration: 0.12s;
+}
+
+.mode-btn:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.mode-btn-active {
+    background-color: rgb(0, 168, 255);
+    color: rgb(255, 255, 255);
+}
+
+.mode-btn-active:hover {
+    background-color: rgb(35, 180, 255);
+}
+
+.controller-status {
+    font-size: 12px;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.status-ok {
+    color: rgb(76, 209, 55);
+}
+
+.status-warn {
+    color: rgb(255, 177, 66);
+}
+
+/* 6. DRAW / TIE SCREEN */
+.draw-title {
+    color: rgb(255, 99, 72);
+}
+
+/* 7. FLOATING SLACK NOTIFICATION TOAST */
+.slack-toast {
+    position: absolute;
+    right: 35px;
+    top: 95px;
+    width: 360px;
+    background-color: rgb(26, 29, 33);
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.18);
+    padding: 14px 16px;
+    transition-property: opacity, translate;
+    transition-duration: 0.3s;
+}
+
+.slack-toast-hidden {
+    opacity: 0;
+    translate: 50px 0;
+    display: none;
+}
+
+.slack-toast-visible {
+    opacity: 1;
+    translate: 0 0;
+    display: flex;
+}
+
+.slack-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.slack-app-name {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(224, 30, 90);
+    letter-spacing: 0.5px;
+}
+
+.slack-channel-name {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.slack-timestamp {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.slack-body {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.slack-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background-color: rgb(230, 76, 60);
+    margin-right: 12px;
+}
+
+.slack-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.slack-sender {
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    margin-bottom: 2px;
+}
+
+.slack-message {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: normal;
+}

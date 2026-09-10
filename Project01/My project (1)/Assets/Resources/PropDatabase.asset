@@ -25,5 +25,5 @@ MonoBehaviour:
   heavy:
     holdStyle: 1
     damage: 60
-    throwForce: 11
+    throwForce: 6.5
     moveSpeedMultiplier: 0.7

@@ -17,6 +17,8 @@ public class GameIntroManager : MonoBehaviour
     [Header("Promotion Round Timer & Sudden Death")]
     [Tooltip("Round duration in seconds (300 = 5 minutes). Easily tunable in Inspector!")]
     public float roundDuration = 300f;
+    [Tooltip("Sudden death duration in seconds (60 = 1 minute timeout). Tunable in Inspector!")]
+    public float suddenDeathDuration = 60f;
 
     [Header("Optional Legacy UI Slots (UI Toolkit handles this automatically)")]
     public GameObject menuPanel;
@@ -32,6 +34,18 @@ public class GameIntroManager : MonoBehaviour
     float currentTimer;
     bool timerRunning = false;
     bool isSuddenDeath = false;
+
+    // Percentage milestones for pacing: 100%, 75%, 50%, 25%, 10%
+    readonly float[] milestonePcts = new float[] { 1.0f, 0.75f, 0.50f, 0.25f, 0.10f };
+    readonly string[] milestoneMessages = new string[]
+    {
+        "Remember, only one of you gets that promotion. Settle it!",
+        "Q4 is ending soon... someone land a hit already!",
+        "Half the meeting is over and both of you are still breathing?!",
+        "Come on, settle it! I don't have time!",
+        "30 seconds left! HR is drafting termination letters!"
+    };
+    bool[] milestoneTriggered = new bool[5];
 
     SimpleMovement[] playersMovement;
     Grabber[] playersGrabber;
@@ -69,29 +83,51 @@ public class GameIntroManager : MonoBehaviour
     {
         if (!gameStarted)
         {
-            var kb = Keyboard.current;
-            if (kb != null && (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame))
+            if (MatchInputManager.GetStartDown())
             {
                 StartGameSequence();
             }
         }
         else
         {
-            // Timer countdown
-            if (timerRunning && !isSuddenDeath)
+            if (timerRunning)
             {
                 currentTimer -= Time.deltaTime;
-                GameUIController.Instance?.UpdateTimer(currentTimer, false);
 
-                if (currentTimer <= 0f)
+                if (!isSuddenDeath)
                 {
-                    TriggerSuddenDeath();
+                    GameUIController.Instance?.UpdateTimer(currentTimer, false);
+
+                    // Check percentage pacing milestones
+                    float pct = currentTimer / roundDuration;
+                    for (int i = 1; i < milestonePcts.Length; i++)
+                    {
+                        if (!milestoneTriggered[i] && pct <= milestonePcts[i])
+                        {
+                            milestoneTriggered[i] = true;
+                            TriggerSlackMilestone(milestoneMessages[i]);
+                        }
+                    }
+
+                    if (currentTimer <= 0f)
+                    {
+                        TriggerSuddenDeath();
+                    }
+                }
+                else
+                {
+                    // Sudden Death countdown
+                    GameUIController.Instance?.UpdateTimer(currentTimer, true);
+
+                    if (currentTimer <= 0f)
+                    {
+                        TriggerNobodyWon();
+                    }
                 }
             }
 
-            // Quick restart with R key
-            var kb = Keyboard.current;
-            if (kb != null && kb.rKey.wasPressedThisFrame)
+            // Quick restart (R key or Gamepad Start/Select)
+            if (MatchInputManager.GetRestartDown())
             {
                 RestartGame();
             }
@@ -157,6 +193,13 @@ public class GameIntroManager : MonoBehaviour
         timerRunning = true;
         isSuddenDeath = false;
 
+        // Start battle music
+        AudioManager.Instance?.PlayBattleMusic();
+
+        // Trigger 100% Start Slack Milestone
+        milestoneTriggered[0] = true;
+        TriggerSlackMilestone(milestoneMessages[0]);
+
         yield return new WaitForSeconds(1.2f);
         GameUIController.Instance?.ShowFightBanner(false);
         if (fightBannerText) fightBannerText.gameObject.SetActive(false);
@@ -165,11 +208,17 @@ public class GameIntroManager : MonoBehaviour
     public void TriggerSuddenDeath()
     {
         isSuddenDeath = true;
-        GameUIController.Instance?.UpdateTimer(0, true);
+        currentTimer = suddenDeathDuration;
+        GameUIController.Instance?.UpdateTimer(currentTimer, true);
 
-        // Notify players with dramatic alert
+        // Switch to Sudden Death tension music
+        AudioManager.Instance?.PlaySuddenDeathMusic();
+
+        // Notify players with dramatic alert & Slack ping
         GameUIController.Instance?.ShowBossDialogue("SUDDEN DEATH! 1 HP EACH! FIRST HIT WINS!", true);
         StartCoroutine(HideSuddenDeathAlert());
+
+        TriggerSlackMilestone("SUDDEN DEATH! 1 HP each! First hit gets the corner office!");
 
         // Drop all alive players to 1 HP
         var allHealths = FindObjectsByType<Health>(FindObjectsSortMode.None);
@@ -177,6 +226,22 @@ public class GameIntroManager : MonoBehaviour
         {
             h.SetSuddenDeath();
         }
+    }
+
+    public void TriggerNobodyWon()
+    {
+        timerRunning = false;
+        SetPlayersControl(false);
+
+        // Stop music and display Nobody Got The Promotion screen
+        AudioManager.Instance?.StopMusic(1.5f);
+        GameUIController.Instance?.ShowDrawScreen();
+    }
+
+    void TriggerSlackMilestone(string message)
+    {
+        AudioManager.Instance?.PlaySlackPing();
+        GameUIController.Instance?.ShowSlackNotification("Executive Boss", message);
     }
 
     IEnumerator HideSuddenDeathAlert()
@@ -217,6 +282,7 @@ public class GameIntroManager : MonoBehaviour
     public void OnGameOver()
     {
         timerRunning = false;
+        AudioManager.Instance?.StopMusic(1.5f);
         if (rematchButton) rematchButton.SetActive(true);
     }
 

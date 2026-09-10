@@ -83,6 +83,9 @@ public class Health : MonoBehaviour
         string winner = (playerIndex == 0) ? "PLAYER 2 WINS!" : "PLAYER 1 WINS!";
         GameUIController.Instance?.ShowVictory(winner);
         GameUI.Instance?.ShowWinner(gameObject.name);
+
+        AudioManager.Instance?.PlayDeath();
+        AudioManager.Instance?.StopMusic(1.5f);
         GameIntroManager.Instance?.OnGameOver();
     }
 }
