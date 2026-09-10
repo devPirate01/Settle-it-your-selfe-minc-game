@@ -12,6 +12,17 @@ public class Grabber : MonoBehaviour
     public float punchCooldown = 1.0f; // 1 punch per second limit
     public int punchDamage = 10;        // Utility tool for disarming
 
+    [Header("Selection Outline")]
+    public bool enableOutline = true;
+    [Range(0.01f, 0.15f)]
+    public float outlineWidth = 0.055f;
+    public Color p1OutlineColor = new Color(0.1f, 0.85f, 1f, 1f);
+    public Color p2OutlineColor = new Color(1f, 0.78f, 0.15f, 1f);
+
+    Transform currentCandidate;
+    static Material outlineMat;
+    static MaterialPropertyBlock outlinePropertyBlock;
+
     Animator anim;
     Transform heldObject;
     Transform rightHand;
@@ -96,20 +107,70 @@ public class Grabber : MonoBehaviour
         return transform.position + transform.forward * fwd + transform.right * side + Vector3.up * up;
     }
 
-    void TryGrab()
+    public Transform GetBestGrabTarget()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, grabRadius);
-        float best = Mathf.Infinity;
+        if (heldObject != null) return null;
+
+        Vector3 aimHeading = transform.forward;
+        if (MatchInputManager.CurrentMode == InputMode.DualController && playerCam != null)
+        {
+            Vector3 camFwd = Vector3.ProjectOnPlane(playerCam.transform.forward, Vector3.up).normalized;
+            if (camFwd.sqrMagnitude > 0.01f) aimHeading = camFwd;
+        }
+
+        Vector3 origin = transform.position + Vector3.up * 0.8f;
+        Collider[] hits = Physics.OverlapSphere(origin, grabRadius);
+        float bestScore = Mathf.Infinity;
         Transform target = null;
+
         foreach (var h in hits)
         {
-            if (!h.CompareTag("Grabbable")) continue;
-            float d = Vector3.Distance(transform.position, h.transform.position);
-            if (d < best) { best = d; target = h.transform; }
+            Transform propRoot = null;
+            if (h.CompareTag("Grabbable")) propRoot = h.transform;
+            else if (h.transform.parent != null && h.transform.parent.CompareTag("Grabbable")) propRoot = h.transform.parent;
+            else
+            {
+                var gp = h.GetComponentInParent<GrabbableProp>();
+                if (gp != null) propRoot = gp.transform;
+            }
+
+            if (propRoot == null) continue;
+
+            // Don't target an object that is currently held by someone
+            var rb = propRoot.GetComponent<Rigidbody>();
+            if (rb != null && rb.isKinematic && propRoot.parent != null) continue;
+
+            // Measure from player torso to prop collider center
+            Vector3 toProp = h.bounds.center - origin;
+            float dist = toProp.magnitude;
+            if (dist < 0.05f) continue;
+
+            Vector3 toPropHoriz = Vector3.ProjectOnPlane(toProp, Vector3.up).normalized;
+            float dot = Vector3.Dot(aimHeading, toPropHoriz);
+
+            // Ignore objects behind the player
+            if (dot < 0f) continue;
+
+            // Directional Aim Scoring: objects where the player/camera points get a major bonus
+            float score = dist - (dot * 1.4f);
+
+            if (score < bestScore)
+            {
+                bestScore = score;
+                target = propRoot;
+            }
         }
+
+        return target;
+    }
+
+    void TryGrab()
+    {
+        Transform target = currentCandidate != null ? currentCandidate : GetBestGrabTarget();
         if (target == null) return;
 
         heldObject = target;
+        currentCandidate = null;
         isGrabbing = true;
 
         // Fetch stats from GrabbableProp if present, otherwise default
@@ -197,13 +258,19 @@ public class Grabber : MonoBehaviour
     public void ForceRelease()
     {
         if (heldObject == null) return;
+
+        var dmg = heldObject.GetComponent<DamageOnImpact>();
+        if (dmg) dmg.isThrown = false;
+
         heldObject.SetParent(null);
         var rb = heldObject.GetComponent<Rigidbody>();
         if (rb)
         {
             rb.isKinematic = false;
-            Vector3 popForce = (Vector3.up * 1.5f + Random.insideUnitSphere * 0.5f).normalized * 3.5f;
+            // Pop the dropped object with a physical tumble
+            Vector3 popForce = (Vector3.up * 1.8f + Random.insideUnitSphere * 0.6f).normalized * 4.0f;
             rb.AddForce(popForce, ForceMode.Impulse);
+            rb.AddTorque(Random.insideUnitSphere * 8f, ForceMode.Impulse);
         }
         heldObject = null;
         activePropStats = null;
@@ -223,13 +290,15 @@ public class Grabber : MonoBehaviour
             if (h.transform.root != transform.root)
             {
                 // Disarm: knock whatever object the victim is holding out of their hands
-                var victimGrabber = h.transform.root.GetComponent<Grabber>();
+                var victimGrabber = h.GetComponentInParent<Grabber>();
+                if (victimGrabber == null) victimGrabber = h.transform.root.GetComponentInChildren<Grabber>();
                 if (victimGrabber != null)
                 {
                     victimGrabber.ForceRelease();
                 }
 
-                var victimHealth = h.transform.root.GetComponent<Health>();
+                var victimHealth = h.GetComponentInParent<Health>();
+                if (victimHealth == null) victimHealth = h.transform.root.GetComponentInChildren<Health>();
                 if (victimHealth != null)
                 {
                     Vector3 knockDir = (h.transform.position - transform.position).normalized;
@@ -256,6 +325,9 @@ public class Grabber : MonoBehaviour
             activePropStats = null;
             if (movement) movement.speedMultiplier = 1f;
         }
+
+        // Update real-time aim candidate for selection outline
+        currentCandidate = GetBestGrabTarget();
 
         // Grab ONLY: LT / A / B on controller; E / RightShift on keyboard
         if (MatchInputManager.GetGrabDown(playerIndex))
@@ -403,6 +475,52 @@ public class Grabber : MonoBehaviour
                 anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
                 anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
                 anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
+            }
+        }
+    }
+
+    void LateUpdate()
+    {
+        if (!enableOutline || currentCandidate == null || heldObject != null) return;
+
+        if (outlineMat == null)
+        {
+            Shader s = Shader.Find("Custom/SelectionOutline");
+            if (s) outlineMat = new Material(s);
+        }
+
+        if (outlineMat != null)
+        {
+            if (outlinePropertyBlock == null) outlinePropertyBlock = new MaterialPropertyBlock();
+
+            // Dynamic breathing pulse
+            float pulse = 0.88f + Mathf.PingPong(Time.time * 2.5f, 0.25f);
+            Color baseCol = (playerIndex == 0) ? p1OutlineColor : p2OutlineColor;
+            Color outlineColor = baseCol * pulse;
+
+            outlinePropertyBlock.SetColor("_OutlineColor", outlineColor);
+            outlinePropertyBlock.SetFloat("_OutlineWidth", outlineWidth);
+
+            Camera camToRender = playerCam != null ? playerCam : Camera.main;
+
+            var meshFilters = currentCandidate.GetComponentsInChildren<MeshFilter>();
+            foreach (var mf in meshFilters)
+            {
+                if (mf && mf.sharedMesh)
+                {
+                    for (int sub = 0; sub < mf.sharedMesh.subMeshCount; sub++)
+                    {
+                        Graphics.DrawMesh(
+                            mf.sharedMesh,
+                            mf.transform.localToWorldMatrix,
+                            outlineMat,
+                            0,
+                            camToRender,
+                            sub,
+                            outlinePropertyBlock
+                        );
+                    }
+                }
             }
         }
     }

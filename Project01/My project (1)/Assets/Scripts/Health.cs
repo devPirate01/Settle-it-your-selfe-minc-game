@@ -26,6 +26,13 @@ public class Health : MonoBehaviour
     {
         if (dead) return;
 
+        // Drop whatever is held whenever taking damage (hit by object or punched)
+        var grabber = GetComponent<Grabber>();
+        if (grabber != null)
+        {
+            grabber.ForceRelease();
+        }
+
         current = Mathf.Max(0, current - amount);
         float normalized = (float)current / maxHealth;
 
@@ -64,8 +71,14 @@ public class Health : MonoBehaviour
     {
         dead = true;
 
+        var grabber = GetComponent<Grabber>();
+        if (grabber != null)
+        {
+            grabber.ForceRelease();
+            grabber.enabled = false;
+        }
+
         GetComponent<SimpleMovement>().enabled = false;
-        GetComponent<Grabber>().enabled = false;
 
         var ragdoll = GetComponent<RagdollController>();
         if (ragdoll != null)

@@ -16,14 +16,14 @@ MonoBehaviour:
     holdStyle: 0
     damage: 20
     throwForce: 18
-    moveSpeedMultiplier: 1
+    moveSpeedMultiplier: 0.802
   medium:
     holdStyle: 0
     damage: 35
     throwForce: 15
-    moveSpeedMultiplier: 1
+    moveSpeedMultiplier: 0.513
   heavy:
     holdStyle: 1
     damage: 60
     throwForce: 6.5
-    moveSpeedMultiplier: 0.7
+    moveSpeedMultiplier: 0.24

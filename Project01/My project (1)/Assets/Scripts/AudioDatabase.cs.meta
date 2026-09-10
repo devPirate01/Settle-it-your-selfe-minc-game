@@ -1,2 +1,15 @@
 fileFormatVersion: 2
 guid: 13d32c4cdda03b34c8d65312e5d58a22
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - battleMusic: {instanceID: 0}
+  - suddenDeathMusic: {instanceID: 0}
+  - playerDeathClip: {instanceID: 0}
+  - slackPingClip: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

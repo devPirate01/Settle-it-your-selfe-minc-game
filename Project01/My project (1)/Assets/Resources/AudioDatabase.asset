@@ -12,13 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13d32c4cdda03b34c8d65312e5d58a22, type: 3}
   m_Name: AudioDatabase
   m_EditorClassIdentifier: Assembly-CSharp::AudioDatabase
-  battleMusic: {fileID: 0}
+  battleMusic: {fileID: 8300000, guid: f7b5eb4fe80e7934d9ca7fca967f65cd, type: 3}
   battleMusicVolume: 0.7
-  suddenDeathMusic: {fileID: 0}
-  suddenDeathMusicVolume: 0.85
-  propHitClips: []
+  suddenDeathMusic: {fileID: 8300000, guid: 7ae62662df56a3e41abc4bad56b6810a, type: 3}
+  suddenDeathMusicVolume: 0.7
+  propHitClips:
+  - {fileID: 8300000, guid: 3853c36cdd775eb46a026252d77b6e69, type: 3}
+  - {fileID: 0}
   propHitVolume: 0.9
-  playerDeathClip: {fileID: 0}
+  playerDeathClip: {fileID: 8300000, guid: 772195cb7e2964b4ba042774a00732f3, type: 3}
   playerDeathVolume: 1
+  defaultSlackNotification: {fileID: 8300000, guid: 301ea849c4e1d2945ba08e6e1033ac22, type: 3}
+  sound_100Percent_MatchStart: {fileID: 8300000, guid: 301ea849c4e1d2945ba08e6e1033ac22, type: 3}
+  sound_75Percent_Q4Warning: {fileID: 8300000, guid: 1d481cf24a1e27d48891ce65c8139da7, type: 3}
+  sound_50Percent_Halfway: {fileID: 8300000, guid: f0fa3c6c5ca5c4742b1e06d8f1563e43, type: 3}
+  sound_25Percent_UrgentRush: {fileID: 8300000, guid: 94e48c4e421eaf74ab690deaa56a3884, type: 3}
+  sound_10Percent_FinalSeconds: {fileID: 8300000, guid: a46f047256bedad46ae9941b5ef8b073, type: 3}
+  sound_0Percent_SuddenDeath: {fileID: 8300000, guid: a46f047256bedad46ae9941b5ef8b073, type: 3}
   slackPingClip: {fileID: 0}
   slackPingVolume: 0.85

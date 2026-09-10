@@ -37,6 +37,14 @@ public class GameIntroManager : MonoBehaviour
 
     // Percentage milestones for pacing: 100%, 75%, 50%, 25%, 10%
     readonly float[] milestonePcts = new float[] { 1.0f, 0.75f, 0.50f, 0.25f, 0.10f };
+    readonly SlackMilestone[] milestoneTypes = new SlackMilestone[]
+    {
+        SlackMilestone.Start_100Pct,
+        SlackMilestone.Quarter_75Pct,
+        SlackMilestone.Halfway_50Pct,
+        SlackMilestone.Urgent_25Pct,
+        SlackMilestone.FinalSeconds_10Pct
+    };
     readonly string[] milestoneMessages = new string[]
     {
         "Remember, only one of you gets that promotion. Settle it!",
@@ -105,7 +113,7 @@ public class GameIntroManager : MonoBehaviour
                         if (!milestoneTriggered[i] && pct <= milestonePcts[i])
                         {
                             milestoneTriggered[i] = true;
-                            TriggerSlackMilestone(milestoneMessages[i]);
+                            TriggerSlackMilestone(milestoneMessages[i], milestoneTypes[i]);
                         }
                     }
 
@@ -198,7 +206,7 @@ public class GameIntroManager : MonoBehaviour
 
         // Trigger 100% Start Slack Milestone
         milestoneTriggered[0] = true;
-        TriggerSlackMilestone(milestoneMessages[0]);
+        TriggerSlackMilestone(milestoneMessages[0], SlackMilestone.Start_100Pct);
 
         yield return new WaitForSeconds(1.2f);
         GameUIController.Instance?.ShowFightBanner(false);
@@ -218,7 +226,7 @@ public class GameIntroManager : MonoBehaviour
         GameUIController.Instance?.ShowBossDialogue("SUDDEN DEATH! 1 HP EACH! FIRST HIT WINS!", true);
         StartCoroutine(HideSuddenDeathAlert());
 
-        TriggerSlackMilestone("SUDDEN DEATH! 1 HP each! First hit gets the corner office!");
+        TriggerSlackMilestone("SUDDEN DEATH! 1 HP each! First hit gets the corner office!", SlackMilestone.SuddenDeath_0Pct);
 
         // Drop all alive players to 1 HP
         var allHealths = FindObjectsByType<Health>(FindObjectsSortMode.None);
@@ -238,9 +246,9 @@ public class GameIntroManager : MonoBehaviour
         GameUIController.Instance?.ShowDrawScreen();
     }
 
-    void TriggerSlackMilestone(string message)
+    void TriggerSlackMilestone(string message, SlackMilestone milestone = SlackMilestone.Start_100Pct)
     {
-        AudioManager.Instance?.PlaySlackPing();
+        AudioManager.Instance?.PlaySlackMilestone(milestone);
         GameUIController.Instance?.ShowSlackNotification("Executive Boss", message);
     }
 

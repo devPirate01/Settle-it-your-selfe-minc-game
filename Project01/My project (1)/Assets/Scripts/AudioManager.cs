@@ -166,12 +166,29 @@ public class AudioManager : MonoBehaviour
         sfxSource.PlayOneShot(DB.playerDeathClip, DB.playerDeathVolume);
     }
 
-    public void PlaySlackPing()
+    public void PlaySlackMilestone(SlackMilestone milestone)
     {
-        if (DB == null || DB.slackPingClip == null) return;
+        if (DB == null) return;
+        AudioClip clip = DB.GetSlackClip(milestone);
+        if (clip == null) return;
 
         sfxSource.pitch = 1.0f;
-        sfxSource.PlayOneShot(DB.slackPingClip, DB.slackPingVolume);
+        sfxSource.PlayOneShot(clip, DB.slackPingVolume);
+    }
+
+    public void PlaySlackMilestone(float pctRemaining)
+    {
+        if (DB == null) return;
+        AudioClip clip = DB.GetSlackClipByPercentage(pctRemaining);
+        if (clip == null) return;
+
+        sfxSource.pitch = 1.0f;
+        sfxSource.PlayOneShot(clip, DB.slackPingVolume);
+    }
+
+    public void PlaySlackPing()
+    {
+        PlaySlackMilestone(SlackMilestone.Start_100Pct);
     }
 
     #endregion
