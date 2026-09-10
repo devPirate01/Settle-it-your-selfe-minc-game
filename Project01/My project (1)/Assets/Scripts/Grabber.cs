@@ -122,6 +122,7 @@ public class Grabber : MonoBehaviour
 
     void Punch()
     {
+        if (heldObject != null) return; // Cannot punch while carrying an object
         punchTimer = punchDuration;
 
         Vector3 punchCenter = transform.position + transform.forward * 1.0f + Vector3.up * 1.1f;
@@ -173,9 +174,9 @@ public class Grabber : MonoBehaviour
         // Punch cooldown
         if (punchCooldownTimer > 0) punchCooldownTimer -= Time.deltaTime;
 
-        // Punch (1s cooldown)
+        // Punch (1s cooldown, blocked while holding an object)
         bool punchPressed = playerIndex == 0 ? kb.qKey.isPressed : kb.numpad0Key.isPressed;
-        if (punchPressed && !wasPunchPressed && punchCooldownTimer <= 0)
+        if (punchPressed && !wasPunchPressed && punchCooldownTimer <= 0 && heldObject == null)
         {
             Punch();
             punchCooldownTimer = punchCooldown;
