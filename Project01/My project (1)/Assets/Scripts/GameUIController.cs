@@ -144,8 +144,8 @@ public class GameUIController : MonoBehaviour
             if (modeKeyboardBtn != null) modeKeyboardBtn.AddToClassList("mode-btn-active");
             if (modeControllerBtn != null) modeControllerBtn.RemoveFromClassList("mode-btn-active");
 
-            if (p1ControlLine != null) p1ControlLine.text = "P1: W/S (Move)  A/D (Turn)  E (Grab/Throw)  Q (Punch)";
-            if (p2ControlLine != null) p2ControlLine.text = "P2: Arrows (Move/Turn)  R-Shift (Grab/Throw)  Num0 (Punch)";
+            if (p1ControlLine != null) p1ControlLine.text = "P1: Move (W/S)  Turn (A/D)  Grab (E)  Throw/Punch (Q)";
+            if (p2ControlLine != null) p2ControlLine.text = "P2: Move/Turn (Arrows)  Grab (R-Shift)  Throw/Punch (Num0)";
             if (startHintText != null) startHintText.text = "Press SPACE or click to start";
         }
         else
@@ -153,8 +153,8 @@ public class GameUIController : MonoBehaviour
             if (modeControllerBtn != null) modeControllerBtn.AddToClassList("mode-btn-active");
             if (modeKeyboardBtn != null) modeKeyboardBtn.RemoveFromClassList("mode-btn-active");
 
-            if (p1ControlLine != null) p1ControlLine.text = "P1: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)";
-            if (p2ControlLine != null) p2ControlLine.text = "P2: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)";
+            if (p1ControlLine != null) p1ControlLine.text = "P1: Move (L-Stick)  Look (R-Stick)  Grab (LT/A/B)  Throw/Punch (RT/X/Y)";
+            if (p2ControlLine != null) p2ControlLine.text = "P2: Move (L-Stick)  Look (R-Stick)  Grab (LT/A/B)  Throw/Punch (RT/X/Y)";
             if (startHintText != null) startHintText.text = "Press START or A on controller to start";
         }
 

@@ -257,21 +257,31 @@ public class Grabber : MonoBehaviour
             if (movement) movement.speedMultiplier = 1f;
         }
 
-        // Grab / Throw
+        // Grab ONLY: LT / A / B on controller; E / RightShift on keyboard
         if (MatchInputManager.GetGrabDown(playerIndex))
         {
-            if (heldObject) Throw();
-            else TryGrab();
+            if (heldObject == null)
+            {
+                TryGrab();
+            }
         }
 
         // Punch cooldown
         if (punchCooldownTimer > 0) punchCooldownTimer -= Time.deltaTime;
 
-        // Punch (1s cooldown, blocked while holding an object)
-        if (MatchInputManager.GetPunchDown(playerIndex) && punchCooldownTimer <= 0 && heldObject == null)
+        // Throw / Punch: RT / X / Y on controller; Q / Num0 on keyboard
+        // Throws if holding an object; punches if empty-handed
+        if (MatchInputManager.GetThrowOrPunchDown(playerIndex))
         {
-            Punch();
-            punchCooldownTimer = punchCooldown;
+            if (heldObject != null)
+            {
+                Throw();
+            }
+            else if (punchCooldownTimer <= 0)
+            {
+                Punch();
+                punchCooldownTimer = punchCooldown;
+            }
         }
 
         // Punch animation

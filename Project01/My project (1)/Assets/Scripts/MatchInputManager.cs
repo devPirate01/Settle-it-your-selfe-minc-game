@@ -121,6 +121,9 @@ public class MatchInputManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Grab ONLY: LT, A, or B on controller; E / RightShift on keyboard.
+    /// </summary>
     public static bool GetGrabDown(int playerIndex)
     {
         if (CurrentMode == InputMode.DualController)
@@ -130,8 +133,10 @@ public class MatchInputManager : MonoBehaviour
                 Gamepad gp = Gamepad.all[playerIndex];
                 if (gp != null)
                 {
-                    // A button (South) or Right Trigger (RT)
-                    return gp.buttonSouth.wasPressedThisFrame || gp.rightTrigger.wasPressedThisFrame;
+                    // LT, A (South), or B (East) for Grab only
+                    return gp.leftTrigger.wasPressedThisFrame 
+                        || gp.buttonSouth.wasPressedThisFrame 
+                        || gp.buttonEast.wasPressedThisFrame;
                 }
             }
         }
@@ -142,7 +147,11 @@ public class MatchInputManager : MonoBehaviour
         return playerIndex == 0 ? kb.eKey.wasPressedThisFrame : kb.rightShiftKey.wasPressedThisFrame;
     }
 
-    public static bool GetPunchDown(int playerIndex)
+    /// <summary>
+    /// Throw / Punch: RT, X, or Y on controller; Q / Num0 on keyboard.
+    /// When carrying an object, throws it. When empty-handed, punches.
+    /// </summary>
+    public static bool GetThrowOrPunchDown(int playerIndex)
     {
         if (CurrentMode == InputMode.DualController)
         {
@@ -151,8 +160,10 @@ public class MatchInputManager : MonoBehaviour
                 Gamepad gp = Gamepad.all[playerIndex];
                 if (gp != null)
                 {
-                    // X button (West) or Right Bumper (RB)
-                    return gp.buttonWest.wasPressedThisFrame || gp.rightShoulder.wasPressedThisFrame;
+                    // RT, X (West), or Y (North) for Throw / Punch
+                    return gp.rightTrigger.wasPressedThisFrame 
+                        || gp.buttonWest.wasPressedThisFrame 
+                        || gp.buttonNorth.wasPressedThisFrame;
                 }
             }
         }
@@ -162,6 +173,9 @@ public class MatchInputManager : MonoBehaviour
 
         return playerIndex == 0 ? kb.qKey.wasPressedThisFrame : kb.numpad0Key.wasPressedThisFrame;
     }
+
+    public static bool GetPunchDown(int playerIndex) => GetThrowOrPunchDown(playerIndex);
+    public static bool GetThrowDown(int playerIndex) => GetThrowOrPunchDown(playerIndex);
 
     public static bool GetStartDown()
     {

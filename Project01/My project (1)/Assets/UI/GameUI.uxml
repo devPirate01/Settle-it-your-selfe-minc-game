@@ -54,8 +54,8 @@
                 <ui:Label text="Press START or A on controller to start" name="start-hint-text" class="hint-text" />
 
                 <ui:VisualElement name="controls-box" class="controls-box">
-                    <ui:Label text="P1: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)" name="p1-control-line" class="control-line" />
-                    <ui:Label text="P2: Left Stick (Move)  Right Stick (Look)  A/RT (Grab)  X/RB (Punch)" name="p2-control-line" class="control-line" />
+                    <ui:Label text="P1: Move (L-Stick)  Look (R-Stick)  Grab (LT/A/B)  Throw/Punch (RT/X/Y)" name="p1-control-line" class="control-line" />
+                    <ui:Label text="P2: Move (L-Stick)  Look (R-Stick)  Grab (LT/A/B)  Throw/Punch (RT/X/Y)" name="p2-control-line" class="control-line" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
